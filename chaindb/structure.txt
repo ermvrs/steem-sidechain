@@ -1,0 +1,11 @@
+Database Structure
+
+-> main
+    -> Contracts
+        -> address
+        -> storage_pointer
+    -> Storages
+        -> id (storage_pointer on Contracts)
+        -> slot (initial slot is 0, EVM gibi 32 byte bir slot yok. Slot ayırma amacı storageı sıralamak)
+            güvenlik amacıyla slotlarda bi sınır olacaktır. 32 byte olabilir.
+            Slotların ikinci amacı mapping ler içindir. slot numarası keccak(mapping_id) evm aynı şeklinde uygulanabilir

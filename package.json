@@ -1,0 +1,11 @@
+{
+  "name": "steem-sidechain",
+  "version": "1.0.0",
+  "description": "Sidechain that works behind STEEM network which provides running Smart Contracts with VM.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Erim Varis",
+  "license": "ISC"
+}

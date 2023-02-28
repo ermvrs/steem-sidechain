@@ -1,4 +1,4 @@
 
 function add(a, b) {
-    console.log(x)
+    external_call('ali')
 }

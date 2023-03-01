@@ -29,14 +29,12 @@ export const CallContract = async function(contract_address, calldata) {
 
     var ctx = calldata;
 
-
-    ctx.readStorage = async (slot) => await readStorage(contract_address, slot);
-    ctx.writeStorage = async (slot, value) => await writeStorage(contract_address, slot, value);
-
-    
-    const context = await createContractCallContext(contract_address, ctx);
-
     try {
+        ctx.readStorage = async (slot) => await readStorage(contract_address, slot);
+        ctx.writeStorage = async (slot, value) => await writeStorage(contract_address, slot, value);
+    
+        
+        const context = await createContractCallContext(contract_address, ctx);
         vm.runInContext(contract_code, context);
         console.log(context)
 
@@ -58,12 +56,33 @@ export const CallContract = async function(contract_address, calldata) {
 
 async function readStorage(contract_address, key) {
     const value = await getStorageSlot(contract_address, key);
-
-    return value;
+    return value["value"];
 }
 
 async function writeStorage(contract_address, slot_id, value) {
-    await writeStorageSlot(contract_address, slot_id, value);
+    return new Promise(async (resolve,reject) => {
+        try { // TRY CATCH TEST EDILMELI VE REVERTE DÖNMELİ
+            await writeStorageSlot(contract_address, slot_id, value);
+            resolve()
+        } catch (ex) {
+            console.error(`Error at writeStorage : ${ex.message}`);
+            reject(ex.message);
+        }
+
+    })
+
+}
+
+async function externalCall(caller, contract_address, method_name, params, gasLimit, value = '0.000 STEEM') {
+    const callResult = await CallContract(contract_address, {
+        caller, gasLimit, value, 
+            payload : {
+                method : method_name,
+                params
+            }
+    })
+
+    return callResult;
 }
 
 // storage read/ write buradan başlamalı

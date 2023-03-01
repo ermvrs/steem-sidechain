@@ -31,11 +31,15 @@ export const getStorageSlot = async (contract_address, slot) => {
     return new Promise((resolve,reject) => {
         const db = getDB();
 
-        let q = "SELECT value FROM main.storages WHERE contract_address = ? AND slot_id = ?";
+        let q = "SELECT value FROM main.storages WHERE contract_address = ? AND slot_id = ? LIMIT 1";
 
         db.all(q,[contract_address, slot], (err,res) => {
             if(err) reject(err);
-            resolve(res);
+            if(res.length > 0) {
+                resolve(res[0]);
+            } else {
+                resolve({value : 0}); // Her storage değeri için initial değer 0
+            }
         })
     })
 }

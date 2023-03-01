@@ -28,7 +28,7 @@ const result = await CallContract("0x123123123123", {
     gasLimit : "1.000 STEEM",
     caller : "MSG.SENDER",
     payload : {
-        method : "writer",
+        method : "reader",
         params : [0, "test2"]
     }
 });

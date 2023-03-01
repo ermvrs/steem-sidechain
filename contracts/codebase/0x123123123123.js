@@ -5,7 +5,7 @@ function add(a,b) {
 async function reader(id) {
     const value = await readStorage(id)
 
-    return value[0];
+    return value;
 }
 
 async function writer(id, value) {

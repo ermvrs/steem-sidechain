@@ -26,3 +26,16 @@ export const getStorage = async (contract_address) => {
         })
     })
 }
+
+export const getStorageSlot = async (contract_address, slot) => {
+    return new Promise((resolve,reject) => {
+        const db = getDB();
+
+        let q = "SELECT value FROM main.storages WHERE contract_address = ? AND slot_id = ?";
+
+        db.all(q,[contract_address, slot], (err,res) => {
+            if(err) reject(err);
+            resolve(res);
+        })
+    })
+}

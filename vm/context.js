@@ -1,8 +1,10 @@
 // Burada kontrat çağrıları için gerekecek context oluşturulur.
 import { getStorage } from '../chaindb/read.js';
+import vm from 'node:vm';
 
-export const createContractCallContext = async function(contract_address) {
-    const storage = await getStorage(contract_address);
+export const createContractCallContext = async function(contract_address, ctx) {
 
-    console.log(storage)
+    const context = vm.createContext(ctx);
+
+    return context;
 }

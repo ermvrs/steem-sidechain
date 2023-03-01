@@ -9,7 +9,7 @@ export const testVM = async () => {
     await createContractCallContext("0x123123123123")
     vm.createContext(context);
 
-    const script = await fs.readFile('./vm/examples/smart_contract_1.js')
+    const script = await fs.readFile('./vm/examples/smart_contract_1.js', 'utf-8')
 
     vm.runInContext(script, context);
 

@@ -30,7 +30,7 @@ export const CallContract = async function(contract_address, calldata) {
     var ctx = calldata;
 
     try {
-        ctx.readStorage = async (slot) => await readStorage(contract_address, slot);
+        ctx.readStorage = async (slot) => await readStorage(contract_address, slot); // delegate call da contract address parametresi değişmeli
         ctx.writeStorage = async (slot, value) => await writeStorage(contract_address, slot, value);
     
         

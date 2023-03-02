@@ -22,11 +22,11 @@ const sample_call = {
     }
 };
 
-
+// Call başlamadan önce snapshot alınmalı.
 const result = await CallContract("0xERC20", {
     value : "2.000 STEEM",
     gasLimit : "1.000 STEEM",
-    caller : "MSG.SENDER",
+    caller : "msg.sender",
     payload : {
         method : "transfer",
         params : ["inven.cu02", 100]

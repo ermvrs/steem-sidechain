@@ -1,3 +1,3 @@
 function viewMethod(a,b) {
-    return caller;
+    return {caller, x : a + b};
 }

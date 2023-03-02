@@ -13,6 +13,7 @@
   "dependencies": {
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "keccak256": "^1.0.6",
     "sqlite3": "^5.1.4",
     "steem": "^0.7.11",
     "vm2": "^3.9.14"

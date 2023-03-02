@@ -15,7 +15,7 @@ async function totalSupply() {
 }
 
 async function balanceOf(address) {
-    const balance = await readStorage(`balance[${address}]`); // TODO mapping geliştirilecek hash fonksiyon
+    const balance = await readStorage(mapping("balances",address));
     return parseFloat(balance);
 }
 
@@ -34,8 +34,16 @@ async function transfer(receiver, amount) {
     const receiverBalance = await balanceOf(receiver);
     const receiverNewBalance = receiverBalance + amount;
 
-    await writeStorage(`balance[${caller}]`, newCallerBalance);
-    await writeStorage(`balance[${receiver}]`, receiverNewBalance);
+    await writeStorage(mapping("balances",caller), newCallerBalance);
+    await writeStorage(mapping("balances", receiver), receiverNewBalance);
     
+    return true;
+}
+
+async function mint(receiver, amount) {
+    const receiverBalance = await balanceOf(receiver);
+    const receiverNewBalance = receiverBalance + amount;
+
+    await writeStorage(mapping("balances", receiver), receiverNewBalance);
     return true;
 }

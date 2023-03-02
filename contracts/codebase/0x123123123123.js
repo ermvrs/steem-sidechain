@@ -22,5 +22,9 @@ async function callRemoteContract() {
     if(response.result === "REVERT") {
         return false;
     }
-    return response.data.return // sonuç bu prop ta döner
+    return response.data // sonuç bu prop ta döner
+}
+
+function sampleMap(...a) {
+    return mapping(...a);
 }

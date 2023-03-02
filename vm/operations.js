@@ -4,6 +4,7 @@ import { getStorageSlot } from '../chaindb/read.js';
 import { writeStorageSlot } from '../chaindb/write.js';
 import { createContractCallContext } from './context.js';
 import vm from 'node:vm';
+import keccak256 from 'keccak256';
 
 // RESULT REVERT ise data string, SUCCESS ise data obje
 function callReturn(result, data) {
@@ -33,7 +34,7 @@ export const CallContract = async function(contract_address, calldata) {
         ctx.readStorage = async (slot) => await readStorage(contract_address, slot); // delegate call da contract address parametresi değişmeli
         ctx.writeStorage = async (slot, value) => await writeStorage(contract_address, slot, value);
         ctx.externalCall = async (external_contract_address, method_name, params, gasLimit, value) => await externalCall(contract_address, external_contract_address, method_name, params, gasLimit, value);
-        
+        ctx.mapping = (...params) => map(...params)
         
         const context = await createContractCallContext(contract_address, ctx);
         vm.runInContext(contract_code, context);
@@ -44,12 +45,11 @@ export const CallContract = async function(contract_address, calldata) {
         }
 
         const result = await context[calldata.payload.method](...calldata.payload.params);
-        return callReturn("SUCCESS", {
-            return : result
-        })
+        return callReturn("SUCCESS", result
+        )
 
     } catch (ex) {
-        console.error(`Error on call : ${ex.message}`)
+        return callReturn("REVERT", ex.message)
     }
 }
 
@@ -85,6 +85,10 @@ async function externalCall(caller, contract_address, method_name, params, gasLi
     })
 
     return callResult;
+}
+
+function map(...params) {
+    return keccak256(params.reduce((total, current) => total + current)).toString('hex')
 }
 
 async function revert() {

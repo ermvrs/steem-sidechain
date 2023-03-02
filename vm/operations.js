@@ -3,6 +3,7 @@ import { getContractCode } from '../contracts/code.js';
 import { getStorageSlot } from '../chaindb/read.js';
 import { writeStorageSlot } from '../chaindb/write.js';
 import { createContractCallContext } from './context.js';
+import { createBreakpointObject, insertChange, getChanges, rollbackChanges, clearBreakpoint} from './snapshot.js';
 import vm from 'node:vm';
 import keccak256 from 'keccak256';
 
@@ -14,12 +15,17 @@ function callReturn(result, data) {
 }
 
 export const CallContract = async function(contract_address, calldata) {
+    // Kontrat çağrısı başlangıç yeri
+    
+    return await CallCode(contract_address, calldata);
+}
+
+export const CallCode = async function(contract_address, calldata) {
     // external call metodu
     // aynı zamanda normal transactionlarında giriş kısmı
     // burada contract_Address storage ı kullanılır. Delegate calldan ayrı bir şekilde
-    console.log("Call contract start")
+    console.log("Call code start")
     const contract_code = await getContractCode(contract_address);
-
     if(!contract_code) {
         return callReturn("REVERT", "CONTRACT_CODE_NOT_FOUND")
     }
@@ -38,7 +44,6 @@ export const CallContract = async function(contract_address, calldata) {
         
         const context = await createContractCallContext(contract_address, ctx);
         vm.runInContext(contract_code, context);
-        console.log(context)
 
         if(!context.hasOwnProperty(calldata.payload.method)) {
             return callReturn("REVERT", "METHOD_NOT_FOUND")
@@ -64,7 +69,9 @@ async function writeStorage(contract_address, slot_id, value) {
     // TODO önemli. Revert işlemler dbyi güncellememeli.
     return new Promise(async (resolve,reject) => {
         try { // TRY CATCH TEST EDILMELI VE REVERTE DÖNMELİ
+            const initialValue = await readStorage(contract_address, slot_id);
             await writeStorageSlot(contract_address, slot_id, value);
+            insertChange(contract_address, { slot_id, from : initialValue, to: value });
             resolve()
         } catch (ex) {
             console.error(`Error at writeStorage : ${ex.message}`);
@@ -76,13 +83,22 @@ async function writeStorage(contract_address, slot_id, value) {
 }
 
 async function externalCall(caller, contract_address, method_name, params, gasLimit, value = '0.000 STEEM') {
-    const callResult = await CallContract(contract_address, {
+    // external caller için snapshot-revert burada yapılmalı
+    createBreakpointObject(contract_address);
+    const callResult = await CallCode(contract_address, {
         caller, gasLimit, value, 
             payload : {
                 method : method_name,
                 params
             }
     })
+    if(callResult.result === 'REVERT') {
+        // rollback
+        console.log('Rolling back changes')
+        await rollbackChanges(contract_address);
+    }
+    clearBreakpoint(contract_address);
+    console.log(callResult)
 
     return callResult;
 }

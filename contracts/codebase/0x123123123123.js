@@ -17,7 +17,7 @@ async function writer(id, value) {
 }
 
 async function callRemoteContract() {
-    const response = await externalCall("0x123", "viewMethod", [2,5], "1.000 STEEM", "0.000 STEEM")
+    const response = await externalCall("0x123", "writeMethod", [2,13], "1.000 STEEM", "0.000 STEEM")
     // response içerisinde result ve data döner
     if(response.result === "REVERT") {
         return false;

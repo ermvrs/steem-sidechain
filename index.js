@@ -28,7 +28,7 @@ const result = await CallContract("0xERC20", {
     gasLimit : "1.000 STEEM",
     caller : "msg.sender",
     payload : {
-        method : "transfer",
+        method : "mint",
         params : ["inven.cu02", 100]
     }
 });

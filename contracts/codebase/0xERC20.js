@@ -1,3 +1,13 @@
+async function initialize() {
+    // constructor
+    const isInitialized = await readStorage("initialized");
+    if(isInitialized == 1) {
+        throw new Error("Already initialized");
+    }
+    await writeStorage("initialized", 1);
+    await writeStorage("owner", caller);
+}
+
 async function name() {
     return readStorage('name');
 }
@@ -41,6 +51,9 @@ async function transfer(receiver, amount) {
 }
 
 async function mint(receiver, amount) {
+    if(caller != await readStorage("owner")) {
+        throw new Error("Only Owner")
+    }
     const receiverBalance = await balanceOf(receiver);
     const receiverNewBalance = receiverBalance + amount;
 

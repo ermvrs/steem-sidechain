@@ -23,13 +23,13 @@ const sample_call = {
 };
 
 
-const result = await CallContract("0x123123123123", {
+const result = await CallContract("0xERC20", {
     value : "2.000 STEEM",
     gasLimit : "1.000 STEEM",
     caller : "MSG.SENDER",
     payload : {
-        method : "reader",
-        params : [0, "test2"]
+        method : "transfer",
+        params : ["inven.cu02", 100]
     }
 });
 

@@ -32,7 +32,8 @@ export const CallContract = async function(contract_address, calldata) {
     try {
         ctx.readStorage = async (slot) => await readStorage(contract_address, slot); // delegate call da contract address parametresi değişmeli
         ctx.writeStorage = async (slot, value) => await writeStorage(contract_address, slot, value);
-    
+        ctx.externalCall = async (external_contract_address, method_name, params, gasLimit, value) => await externalCall(contract_address, external_contract_address, method_name, params, gasLimit, value);
+        
         
         const context = await createContractCallContext(contract_address, ctx);
         vm.runInContext(contract_code, context);

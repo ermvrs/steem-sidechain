@@ -61,6 +61,7 @@ async function readStorage(contract_address, key) {
 }
 
 async function writeStorage(contract_address, slot_id, value) {
+    // TODO önemli. Revert işlemler dbyi güncellememeli.
     return new Promise(async (resolve,reject) => {
         try { // TRY CATCH TEST EDILMELI VE REVERTE DÖNMELİ
             await writeStorageSlot(contract_address, slot_id, value);
@@ -84,6 +85,11 @@ async function externalCall(caller, contract_address, method_name, params, gasLi
     })
 
     return callResult;
+}
+
+async function revert() {
+    // Kontrat içerisinden çağrılan revert metodu.
+    //  Revert edilirse database güncellenmemeli.
 }
 
 // storage read/ write buradan başlamalı

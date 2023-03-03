@@ -17,7 +17,20 @@ async function writer(id, value) {
 }
 
 async function callRemoteContract() {
-    const response = await externalCall("0x123", "writeMethod", [2,13], "1.000 STEEM", "0.000 STEEM")
+    const response = await externalCall("0x123", "writeMethod", [4,1], "1.000 STEEM", "0.000 STEEM")
+
+    const responsex = await externalCall("0x123", "writeMethod", [6,4], "1.000 STEEM", "0.000 STEEM")
+
+    // response içerisinde result ve data döner
+    if(response.result === "REVERT") {
+        return false;
+    }
+    return response.data // sonuç bu prop ta döner
+}
+
+async function response(a,b) {
+    const response = await externalCall("0x123", "writeMethod", [a,b], "1.000 STEEM", "0.000 STEEM")
+    await writeStorage("aasas", 3);
     // response içerisinde result ve data döner
     if(response.result === "REVERT") {
         return false;

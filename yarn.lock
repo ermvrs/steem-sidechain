@@ -1560,6 +1560,11 @@ tr46@~0.0.3:
   resolved "https://registry.yarnpkg.com/tr46/-/tr46-0.0.3.tgz#8184fd347dac9cdc185992f3a6622e14b9d9ab6a"
   integrity sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==
 
+treenode@^0.2.3:
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/treenode/-/treenode-0.2.3.tgz#571ad95627a5a5ae92f246d8a875c4b19dd5b623"
+  integrity sha512-7+CAus26BGVUH/rcxheB9K0aDd3K+XtDp2qxAwKQVv/5D/viQ+it47HHdj0rA+4u+jquVyfHr7Fl73Wpp5b0BQ==
+
 type-is@~1.6.18:
   version "1.6.18"
   resolved "https://registry.yarnpkg.com/type-is/-/type-is-1.6.18.tgz#4e552cd05df09467dcbc4ef739de89f2cf37c131"

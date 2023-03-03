@@ -23,12 +23,12 @@ const sample_call = {
 };
 
 // Call başlamadan önce snapshot alınmalı.
-const result = await CallContract("0xERC20", {
+const result = await CallContract("0x123123123123", {
     value : "2.000 STEEM",
     gasLimit : "1.000 STEEM",
     caller : "msg.sender",
     payload : {
-        method : "mint",
+        method : "callRemoteContract",
         params : ["inven.cu02", 100]
     }
 });

@@ -53,3 +53,32 @@ export const clearBreakpoint = function (contract_address) {
 export const clearAllBreakpoints = function() {
     return Snapshots.clear();
 }
+
+// GLOBAL REVERT
+let checkpoint;
+
+export const createCheckpoint = function() {
+    checkpoint = [];
+}
+
+export const addChange = function (change) {
+    checkpoint.push(change);
+}
+
+export const clearCheckpoint = function() {
+    checkpoint = [];
+}
+
+export const getChanges2 = function() {
+    return checkpoint;
+}
+
+export const rollbackCheckpoint = async function() {
+    const changes = checkpoint.reverse();
+
+    for (const change of changes) {
+        await rollbackSlot(change.contract_address, change.slot_id, change.from);
+    }
+
+    checkpoint = [];
+}

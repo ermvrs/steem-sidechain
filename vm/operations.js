@@ -3,7 +3,7 @@ import { getContractCode } from '../contracts/code.js';
 import { getStorageSlot } from '../chaindb/read.js';
 import { writeStorageSlot } from '../chaindb/write.js';
 import { createContractCallContext } from './context.js';
-import { createBreakpointObject, insertChange, getChanges, rollbackChanges, clearBreakpoint} from './snapshot.js';
+import { createBreakpointObject, insertChange, getChanges, rollbackChanges, clearBreakpoint, createCheckpoint, addChange, getChanges2} from './snapshot.js';
 import { createRoot, addChild, addChangeToChild, rollBackChilds } from './calltree.js';
 import vm from 'node:vm';
 import keccak256 from 'keccak256';
@@ -17,14 +17,17 @@ function callReturn(result, data) {
 
 export const CallContract = async function(contract_address, calldata) {
     // Kontrat çağrısı başlangıç yeri
-    const tree = createRoot();
-    const result = await CallCode(contract_address, calldata, tree);
-    console.log('child')
-    await rollBackChilds(tree)
+    // const tree = createRoot();
+    createCheckpoint();
+    const result = await CallCode(contract_address, calldata);
+    //await rollBackChilds(tree)
+    console.log(getChanges2());
     return result;
 }
+// TODO
+// REVERT VEYA THROW BİR KERE ÇAĞRILDIMI TÜM TRANSACTION IPTAL EDILMELI
 
-export const CallCode = async function(contract_address, calldata, tree) {
+export const CallCode = async function(contract_address, calldata) {
     // external call metodu
     // aynı zamanda normal transactionlarında giriş kısmı
     // burada contract_Address storage ı kullanılır. Delegate calldan ayrı bir şekilde
@@ -42,10 +45,11 @@ export const CallCode = async function(contract_address, calldata, tree) {
 
     try {
         ctx.readStorage = async (slot) => await readStorage(contract_address, slot); // delegate call da contract address parametresi değişmeli
-        ctx.writeStorage = async (slot, value) => await writeStorage(contract_address, slot, value, tree);
-        ctx.externalCall = async (external_contract_address, method_name, params, gasLimit, value) => await externalCall(contract_address, external_contract_address, method_name, params, gasLimit, tree, value);
+        ctx.writeStorage = async (slot, value) => await writeStorage(contract_address, slot, value);
+        ctx.externalCall = async (external_contract_address, method_name, params, gasLimit, value) => await externalCall(contract_address, external_contract_address, method_name, params, gasLimit, value);
         ctx.mapping = (...params) => map(...params)
-        
+        // ctx.revert = (reason) => await revert(reason, )
+        // eğer revert edildiyse execution burada durmalı
         const context = await createContractCallContext(contract_address, ctx);
         vm.runInContext(contract_code, context);
 
@@ -69,14 +73,17 @@ async function readStorage(contract_address, key) {
     return value["value"];
 }
 
-async function writeStorage(contract_address, slot_id, value, tree) {
+async function writeStorage(contract_address, slot_id, value) {
     // TODO önemli. Revert işlemler dbyi güncellememeli.
     return new Promise(async (resolve,reject) => {
         try { // TRY CATCH TEST EDILMELI VE REVERTE DÖNMELİ
             const initialValue = await readStorage(contract_address, slot_id);
             await writeStorageSlot(contract_address, slot_id, value);
             //insertChange(contract_address, { slot_id, from : initialValue, to: value }); // deprecate
-            addChangeToChild(tree, {contract_address : contract_address,  slot_id, from : initialValue, to: value })
+            addChange({
+                contract_address, slot_id, from: initialValue, to : value
+            });
+            // addChangeToChild(tree, {contract_address : contract_address,  slot_id, from : initialValue, to: value })
             resolve()
         } catch (ex) {
             console.error(`Error at writeStorage : ${ex.message}`);
@@ -87,17 +94,17 @@ async function writeStorage(contract_address, slot_id, value, tree) {
 
 }
 
-async function externalCall(caller, contract_address, method_name, params, gasLimit, parent, value = '0.000 STEEM') {
+async function externalCall(caller, contract_address, method_name, params, gasLimit, value = '0.000 STEEM') {
     // external caller için snapshot-revert burada yapılmalı
     //createBreakpointObject(contract_address); // deprecate
-    const tree = addChild(parent);
+    // const tree = addChild(parent);
     const callResult = await CallCode(contract_address, {
         caller, gasLimit, value, 
             payload : {
                 method : method_name,
                 params
             }
-    }, tree);
+    });
     if(callResult.result === 'REVERT') {
         // rollback
         console.log('Rolling back changes')
@@ -117,6 +124,7 @@ function map(...params) {
 async function revert() {
     // Kontrat içerisinden çağrılan revert metodu.
     //  Revert edilirse database güncellenmemeli.
+    // Bu global revert metodu olarak kullanılmalı. Bu çağrıldığında tüm transaction iptal edilir.
 }
 
 // storage read/ write buradan başlamalı

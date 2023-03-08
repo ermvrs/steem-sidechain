@@ -3,7 +3,7 @@ import { getContractCode } from '../contracts/code.js';
 import { getStorageSlot } from '../chaindb/read.js';
 import { writeStorageSlot } from '../chaindb/write.js';
 import { createContractCallContext } from './context.js';
-import { createBreakpointObject, insertChange, getChanges, rollbackChanges, clearBreakpoint, createCheckpoint, addChange, getChanges2} from './snapshot.js';
+import { createBreakpointObject, insertChange, getChanges, rollbackChanges, rollbackCheckpoint, createCheckpoint, addChange, getChanges2} from './snapshot.js';
 import { createRoot, addChild, addChangeToChild, rollBackChilds } from './calltree.js';
 import vm from 'node:vm';
 import keccak256 from 'keccak256';
@@ -15,13 +15,32 @@ function callReturn(result, data) {
     }
 }
 
+let revertReason;
+
 export const CallContract = async function(contract_address, calldata) {
     // Kontrat çağrısı başlangıç yeri
     // const tree = createRoot();
     createCheckpoint();
+    revertReason = {
+        status : false,
+        reason : ""
+    };
     const result = await CallCode(contract_address, calldata);
+    if(result.result === "REVERT") {
+        revertReason = {
+            status : true,
+            reason : result.data,
+            contract_address
+        }
+    }
     //await rollBackChilds(tree)
     console.log(getChanges2());
+
+    if(revertReason.status) {
+        console.log('Reverting all changes')
+        await rollbackCheckpoint()
+        return callReturn("REVERT", {reason : revertReason.reason, contract : revertReason.contract_address})
+    }
     return result;
 }
 // TODO
@@ -110,6 +129,12 @@ async function externalCall(caller, contract_address, method_name, params, gasLi
         console.log('Rolling back changes')
         //await rollbackChanges(contract_address);
         //await rollBackChilds(tree);
+        // global revert at
+        revertReason = {
+            status: true,
+            reason : callResult.data,
+            contract_address
+        }
     }
     //clearBreakpoint(contract_address);
     console.log(callResult)

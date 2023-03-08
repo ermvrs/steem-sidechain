@@ -149,7 +149,7 @@ async function _spendAllowance(owner, spender, amount) {
 }
 
 // owner methods
-async function assertOnlyOwner() {
+async function _assertOnlyOwner() {
     const owner = await readStorage("owner");
 
     if(owner !== caller) {
@@ -160,7 +160,7 @@ async function assertOnlyOwner() {
 }
 
 async function mint(account, amount) {
-    await assertOnlyOwner();
+    await _assertOnlyOwner();
 
     await _mint(account, amount);
 
@@ -168,7 +168,7 @@ async function mint(account, amount) {
 }
 
 async function transferOwnership(account) {
-    await assertOnlyOwner();
+    await _assertOnlyOwner();
 
     await writeStorage("owner", account);
     return true;

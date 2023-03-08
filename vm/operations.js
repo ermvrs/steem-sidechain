@@ -100,10 +100,10 @@ async function writeStorage(contract_address, slot_id, value = 0) {
     return new Promise(async (resolve,reject) => {
         try { // TRY CATCH TEST EDILMELI VE REVERTE DÖNMELİ
             if(WRITE_SLOT_ALLOWED_DATA_TYPES.indexOf(typeof value) == -1) {
-                reject("STORAGE WRITE DATA TYPE VIOLATION")
+                reject("STORAGE_WRITE_DATA_TYPE_VIOLATION")
             }
             if(value && value.length > WRITE_SLOT_LENGTH_LIMIT) { // value array gelirse bypass oluyor mu?
-                reject("STORAGE WRITE LIMIT VIOLATION")
+                reject("STORAGE_WRITE_LIMIT_VIOLATION")
             }
             const initialValue = await readStorage(contract_address, slot_id);
             await writeStorageSlot(contract_address, slot_id, value);

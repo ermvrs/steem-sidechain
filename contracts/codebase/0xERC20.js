@@ -1,4 +1,4 @@
-import BigNumber from "bignumber.js";
+
 
 async function initialize() {
     // constructor
@@ -58,8 +58,12 @@ async function transferFrom(sender, receiver, amount) {
         throw new Error("Transfer amount exceeds balance");
     }
 
-    
+    // TODO transfer
 
+}
+
+async function _transfer() {
+    // TODO transfer
 }
 
 async function transfer(receiver, amount) {

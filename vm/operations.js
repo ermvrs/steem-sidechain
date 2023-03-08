@@ -83,8 +83,7 @@ export const CallCode = async function(contract_address, calldata) {
         }
 
         const result = await context[calldata.payload.method](...calldata.payload.params);
-        return callReturn("SUCCESS", result
-        )
+        return callReturn("SUCCESS", result)
 
     } catch (ex) {
         return callReturn("REVERT", ex.message)

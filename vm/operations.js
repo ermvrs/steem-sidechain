@@ -3,9 +3,11 @@ import { getContractCode } from '../contracts/code.js';
 import { getStorageSlot } from '../chaindb/read.js';
 import { writeStorageSlot } from '../chaindb/write.js';
 import { createContractCallContext } from './context.js';
+import { WRITE_SLOT_LENGTH_LIMIT } from './rules.js';
 import { createBreakpointObject, insertChange, getChanges, rollbackChanges, rollbackCheckpoint, createCheckpoint, addChange, getChanges2} from './snapshot.js';
 import vm from 'node:vm';
 import keccak256 from 'keccak256';
+import BigNumber from 'bignumber.js';
 
 // RESULT REVERT ise data string, SUCCESS ise data obje
 function callReturn(result, data) {
@@ -18,7 +20,6 @@ let revertReason;
 
 export const CallContract = async function(contract_address, calldata) {
     // Kontrat çağrısı başlangıç yeri
-    // const tree = createRoot();
     createCheckpoint();
     revertReason = {
         status : false,
@@ -32,7 +33,6 @@ export const CallContract = async function(contract_address, calldata) {
             contract_address
         }
     }
-    //await rollBackChilds(tree)
     console.log(getChanges2());
 
     if(revertReason.status) {
@@ -61,10 +61,6 @@ export const CallCode = async function(contract_address, calldata) {
         return callReturn("REVERT", revertReason.reason) // eğer revert edildiyse bir sonraki external callar buradan return olmalı.
     }
 
-    // KONTRATTAKİ FONKSİYONLARIN KONTROLU YAPILAMAZ ÇÜNKÜ BURASI COMPILED BI RUNNER DEĞİL
-    // 1 Kontrat kodunu çek
-    // 2 Call için context oluştur.
-
     var ctx = calldata;
 
     try {
@@ -74,6 +70,7 @@ export const CallCode = async function(contract_address, calldata) {
         ctx.mapping = (...params) => map(...params)
         ctx.console = (text) => console.log(text) // TESTLERDEN SONRA KALDIRILMALI
         ctx.log = async (text) =>  await log(text) // Ethereumdaki event emit, revert olsada eventler kayıt edilir
+        ctx.BigNumber = BigNumber; // Bignumber, safe math için, NOT : DB YAZDIRIRKEN HEP STRING DONDURULMELI
         
         const context = await createContractCallContext(contract_address, ctx);
         vm.runInContext(contract_code, context);
@@ -98,6 +95,9 @@ async function writeStorage(contract_address, slot_id, value) {
     // TODO önemli. Revert işlemler dbyi güncellememeli.
     return new Promise(async (resolve,reject) => {
         try { // TRY CATCH TEST EDILMELI VE REVERTE DÖNMELİ
+            if(value && value.length > WRITE_SLOT_LENGTH_LIMIT) {
+                reject("STORAGE WRITE LIMIT VIOLATION")
+            }
             const initialValue = await readStorage(contract_address, slot_id);
             await writeStorageSlot(contract_address, slot_id, value);
             //insertChange(contract_address, { slot_id, from : initialValue, to: value }); // deprecate

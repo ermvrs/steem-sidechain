@@ -26,7 +26,7 @@ async function totalSupply() {
 
 async function balanceOf(address) {
     const balance = await readStorage(mapping("balances",address));
-    return parseFloat(balance);
+    return balance;
 }
 
 async function allowance(owner, spender) {

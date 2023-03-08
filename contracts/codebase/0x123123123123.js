@@ -20,7 +20,7 @@ async function callRemoteContract() {
     const bn = new BigNumber("11231231231231310");
     console(bn.toFixed(5))
     const response = await externalCall("0x123", "writeMethod", [1,1], "1.000 STEEM", "0.000 STEEM") // revert olsada diğer call atar ancak kodu çalışmayacaktır.
-    const responsex = await externalCall("0x123", "writeMethod", [65,4], "1.000 STEEM", "0.000 STEEM")
+    // const responsex = await externalCall("0x123", "writeMethod", [65,4], "1.000 STEEM", "0.000 STEEM")
 
     // response içerisinde result ve data döner
     if(response.result === "REVERT") {

@@ -91,7 +91,7 @@ async function readStorage(contract_address, key) {
     return value["value"];
 }
 
-async function writeStorage(contract_address, slot_id, value) {
+async function writeStorage(contract_address, slot_id, value = 0) {
     // TODO önemli. Revert işlemler dbyi güncellememeli.
     return new Promise(async (resolve,reject) => {
         try { // TRY CATCH TEST EDILMELI VE REVERTE DÖNMELİ

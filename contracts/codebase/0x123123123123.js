@@ -17,9 +17,8 @@ async function writer(id, value) {
 }
 
 async function callRemoteContract() {
-    const response = await externalCall("0x123", "writeMethod", [4,1], "1.000 STEEM", "0.000 STEEM")
-
-    const responsex = await externalCall("0x123", "writeMethod", [6,4], "1.000 STEEM", "0.000 STEEM")
+    const response = await externalCall("0x123", "writeMethod", [1,1], "1.000 STEEM", "0.000 STEEM") // revert olsada diğer call atar ancak kodu çalışmayacaktır.
+    const responsex = await externalCall("0x123", "writeMethod", [65,4], "1.000 STEEM", "0.000 STEEM")
 
     // response içerisinde result ve data döner
     if(response.result === "REVERT") {

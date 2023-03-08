@@ -4,7 +4,6 @@ import { getStorageSlot } from '../chaindb/read.js';
 import { writeStorageSlot } from '../chaindb/write.js';
 import { createContractCallContext } from './context.js';
 import { createBreakpointObject, insertChange, getChanges, rollbackChanges, rollbackCheckpoint, createCheckpoint, addChange, getChanges2} from './snapshot.js';
-import { createRoot, addChild, addChangeToChild, rollBackChilds } from './calltree.js';
 import vm from 'node:vm';
 import keccak256 from 'keccak256';
 
@@ -41,19 +40,25 @@ export const CallContract = async function(contract_address, calldata) {
         await rollbackCheckpoint()
         return callReturn("REVERT", {reason : revertReason.reason, contract : revertReason.contract_address})
     }
+
+    revertReason = null;
     return result;
 }
-// TODO
-// REVERT VEYA THROW BİR KERE ÇAĞRILDIMI TÜM TRANSACTION IPTAL EDILMELI
 
 export const CallCode = async function(contract_address, calldata) {
     // external call metodu
     // aynı zamanda normal transactionlarında giriş kısmı
     // burada contract_Address storage ı kullanılır. Delegate calldan ayrı bir şekilde
+
+    // TODO EĞER REVERT OLDUYSA EXTERNAL CALLAR DEVAM ETMESİN BURADAN BİTSİN
     console.log("Call code start")
     const contract_code = await getContractCode(contract_address);
     if(!contract_code) {
         return callReturn("REVERT", "CONTRACT_CODE_NOT_FOUND")
+    }
+
+    if(revertReason.status) {
+        return callReturn("REVERT", revertReason.reason) // eğer revert edildiyse bir sonraki external callar buradan return olmalı.
     }
 
     // KONTRATTAKİ FONKSİYONLARIN KONTROLU YAPILAMAZ ÇÜNKÜ BURASI COMPILED BI RUNNER DEĞİL
@@ -67,8 +72,9 @@ export const CallCode = async function(contract_address, calldata) {
         ctx.writeStorage = async (slot, value) => await writeStorage(contract_address, slot, value);
         ctx.externalCall = async (external_contract_address, method_name, params, gasLimit, value) => await externalCall(contract_address, external_contract_address, method_name, params, gasLimit, value);
         ctx.mapping = (...params) => map(...params)
-        // ctx.revert = (reason) => await revert(reason, )
-        // eğer revert edildiyse execution burada durmalı
+        ctx.console = (text) => console.log(text) // TESTLERDEN SONRA KALDIRILMALI
+        ctx.log = async (text) =>  await log(text) // Ethereumdaki event emit, revert olsada eventler kayıt edilir
+        
         const context = await createContractCallContext(contract_address, ctx);
         vm.runInContext(contract_code, context);
 
@@ -84,9 +90,6 @@ export const CallCode = async function(contract_address, calldata) {
         return callReturn("REVERT", ex.message)
     }
 }
-
-// TODO
-
 async function readStorage(contract_address, key) {
     const value = await getStorageSlot(contract_address, key);
     return value["value"];
@@ -146,10 +149,8 @@ function map(...params) {
     return keccak256(params.reduce((total, current) => total + current)).toString('hex')
 }
 
-async function revert() {
-    // Kontrat içerisinden çağrılan revert metodu.
-    //  Revert edilirse database güncellenmemeli.
-    // Bu global revert metodu olarak kullanılmalı. Bu çağrıldığında tüm transaction iptal edilir.
+async function log() {
+
 }
 
 // storage read/ write buradan başlamalı

@@ -10,10 +10,18 @@ async function writeMethod(a,b) {
 
     await writeStorage("value", a + b);
     try {
-        await writeStorage("bvalue");
+        await writeStorage("bvalue", "");
     } catch(ex) {
         throw new Error(ex)
     }
         
     return true;
+}
+
+function _internalMethod(a,b) {
+    return a * b;
+}
+
+function internalMethod(a,b) {
+    return _internalMethod(a,b);
 }

@@ -1,3 +1,5 @@
+import BigNumber from "bignumber.js";
+
 async function initialize() {
     // constructor
     const isInitialized = await readStorage("initialized");
@@ -9,19 +11,19 @@ async function initialize() {
 }
 
 async function name() {
-    return readStorage('name');
+    return await readStorage('name');
 }
 
 async function symbol() {
-    return readStorage('symbol');
+    return await readStorage('symbol');
 }
 
 async function decimals() {
-    return readStorage('decimals');
+    return await readStorage('decimals');
 }
 
 async function totalSupply() {
-    return readStorage('totalSupply'); // parsefloat standart edilmeli
+    return await readStorage('totalSupply'); // parsefloat standart edilmeli
 }
 
 async function balanceOf(address) {
@@ -29,14 +31,45 @@ async function balanceOf(address) {
     return parseFloat(balance);
 }
 
+async function allowance(owner, spender) {
+    const allowed = await readStorage(mapping("allowances", owner, spender));
+    return allowed;
+}
+
+async function approve(spender, amount) {
+    await writeStorage(mapping("allowances", caller, spender), amount);
+    return true;
+}
+
+async function transferFrom(sender, receiver, amount) {
+    const allowed = await allowance(sender, caller);
+    const amountBN = new BigNumber(amount);
+    if(amountBN.isZero()) {
+        throw new Error("Amount zero")
+    }
+
+    if(new BigNumber(allowed).isLessThan(amountBN)) {
+        throw new Error("Transfer amount exceeds allowance");
+    }
+
+    const balance = new BigNumber(await balanceOf(sender));
+
+    if(balance.isLessThan(amountBN)) {
+        throw new Error("Transfer amount exceeds balance");
+    }
+
+    
+
+}
+
 async function transfer(receiver, amount) {
     if(amount == 0) {
-        return false;
+        throw new Error("Transfer amount cant be zero")
     }
     // TODO RECEIVER VE SENDER ADRES KONTROLLERI
     const callerBalance = await balanceOf(caller); 
     if(callerBalance < amount) {
-        return false; // failed
+        throw new Error("Transfer amount exceeds balance")
     }
 
     // gönderenden bakiye keselim

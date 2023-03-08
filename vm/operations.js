@@ -3,7 +3,7 @@ import { getContractCode } from '../contracts/code.js';
 import { getStorageSlot } from '../chaindb/read.js';
 import { writeStorageSlot } from '../chaindb/write.js';
 import { createContractCallContext } from './context.js';
-import { WRITE_SLOT_LENGTH_LIMIT } from './rules.js';
+import { WRITE_SLOT_LENGTH_LIMIT, WRITE_SLOT_ALLOWED_DATA_TYPES } from './rules.js';
 import { createBreakpointObject, insertChange, getChanges, rollbackChanges, rollbackCheckpoint, createCheckpoint, addChange, getChanges2} from './snapshot.js';
 import vm from 'node:vm';
 import keccak256 from 'keccak256';
@@ -61,6 +61,10 @@ export const CallCode = async function(contract_address, calldata) {
         return callReturn("REVERT", revertReason.reason) // eğer revert edildiyse bir sonraki external callar buradan return olmalı.
     }
 
+    if(calldata.payload.method.slice(0,1) === "_") {
+        return callReturn("REVERT", "CALLING_INTERNAL_METHOD")
+    }
+
     var ctx = calldata;
 
     try {
@@ -95,16 +99,19 @@ async function writeStorage(contract_address, slot_id, value = 0) {
     // TODO önemli. Revert işlemler dbyi güncellememeli.
     return new Promise(async (resolve,reject) => {
         try { // TRY CATCH TEST EDILMELI VE REVERTE DÖNMELİ
-            if(value && value.length > WRITE_SLOT_LENGTH_LIMIT) {
+            if(WRITE_SLOT_ALLOWED_DATA_TYPES.indexOf(typeof value) == -1) {
+                reject("STORAGE WRITE DATA TYPE VIOLATION")
+            }
+            if(value && value.length > WRITE_SLOT_LENGTH_LIMIT) { // value array gelirse bypass oluyor mu?
                 reject("STORAGE WRITE LIMIT VIOLATION")
             }
             const initialValue = await readStorage(contract_address, slot_id);
             await writeStorageSlot(contract_address, slot_id, value);
-            //insertChange(contract_address, { slot_id, from : initialValue, to: value }); // deprecate
+
             addChange({
                 contract_address, slot_id, from: initialValue, to : value
             });
-            // addChangeToChild(tree, {contract_address : contract_address,  slot_id, from : initialValue, to: value })
+
             resolve()
         } catch (ex) {
             console.error(`Error at writeStorage : ${ex.message}`);
@@ -117,8 +124,6 @@ async function writeStorage(contract_address, slot_id, value = 0) {
 
 async function externalCall(caller, contract_address, method_name, params, gasLimit, value = '0.000 STEEM') {
     // external caller için snapshot-revert burada yapılmalı
-    //createBreakpointObject(contract_address); // deprecate
-    // const tree = addChild(parent);
     const callResult = await CallCode(contract_address, {
         caller, gasLimit, value, 
             payload : {
@@ -127,11 +132,6 @@ async function externalCall(caller, contract_address, method_name, params, gasLi
             }
     });
     if(callResult.result === 'REVERT') {
-        // rollback
-        console.log('Rolling back changes')
-        //await rollbackChanges(contract_address);
-        //await rollBackChilds(tree);
-        // global revert at
         revertReason = {
             status: true,
             reason : callResult.data,
